@@ -108,9 +108,6 @@ export const ContractCalculatorView: React.FC<Props> = ({
     }
   };
 
-  // Custom monthly installment override (allows typing any number like 800, 200, 86666.67)
-  const [customMonthlyInput, setCustomMonthlyInput] = useState<string>('');
-
   // Live calculation results
   const calculation = useMemo(() => {
     return calculateInstallment({
@@ -121,9 +118,8 @@ export const ContractCalculatorView: React.FC<Props> = ({
       monthlyProfitRate: profitRate,
       ownerFee: ownerFeeAmount,
       enableOwnerFee,
-      customMonthlyAmount: customMonthlyInput ? Number(customMonthlyInput) : undefined,
     });
-  }, [phonePrice, downPayment, months, profitRate, ownerFeeAmount, enableOwnerFee, customMonthlyInput]);
+  }, [phonePrice, downPayment, months, profitRate, ownerFeeAmount, enableOwnerFee]);
 
   // Live schedule with exact remainder balancing so sum equals remainingBalance
   const schedule = useMemo(() => {
@@ -654,44 +650,6 @@ export const ContractCalculatorView: React.FC<Props> = ({
                 </span>
               </div>
 
-              {/* Monthly Installment Input (Auto or Custom Any Amount: e.g. 800, 200, 86666.67) */}
-              <div className="bg-emerald-50/70 border border-emerald-300 rounded-xl p-3 shadow-xs">
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-emerald-950 font-bold">
-                    قیستی مانگانە (دینار و سەنت) *
-                  </label>
-                  {customMonthlyInput ? (
-                    <button
-                      type="button"
-                      onClick={() => setCustomMonthlyInput('')}
-                      className="text-[10px] text-amber-800 bg-amber-100 hover:bg-amber-200 px-2 py-0.5 rounded font-bold transition-colors flex items-center gap-1 cursor-pointer border border-amber-300"
-                      title="گێڕانەوە بۆ حیسابکردنی خۆکاری سیستەم"
-                    >
-                      <span>دەستکاری کراوە</span>
-                      <span>(خۆکار 🔄)</span>
-                    </button>
-                  ) : (
-                    <span className="text-[10px] text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded font-bold border border-emerald-300">
-                      خۆکار حیسابکراوە
-                    </span>
-                  )}
-                </div>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={customMonthlyInput !== '' ? customMonthlyInput : (calculation.monthlyInstallmentAmount || '')}
-                  onChange={(e) => setCustomMonthlyInput(e.target.value)}
-                  placeholder="بۆ نموونە: 800 یان 200 یان 86666.67"
-                  className="w-full bg-white border border-emerald-400 rounded-lg px-3 py-2 text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 font-mono text-base font-bold text-emerald-900"
-                  dir="ltr"
-                />
-                <div className="mt-1.5 text-[11px]">
-                  <span className="text-[10px] text-emerald-900 font-medium">
-                    دەتوانیت هەر نرخێک بنووسیت (وەک 800 یان 200 یاخود بڕی خۆکار)
-                  </span>
-                </div>
-              </div>
 
               <div>
                 <label className="block text-slate-700 font-medium mb-1">
