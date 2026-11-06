@@ -12,7 +12,12 @@ import {
   RefreshCw,
   LogOut,
   Smartphone,
-  Laptop
+  Laptop,
+  Monitor,
+  Terminal,
+  FolderArchive,
+  HardDrive,
+  ExternalLink
 } from 'lucide-react';
 import { ShopSettings } from '../types/index.ts';
 import { User } from 'firebase/auth';
@@ -432,6 +437,102 @@ export const SettingsAndBackupView: React.FC<Props> = ({
               onChange={handleRestoreFile}
             />
           </label>
+        </div>
+      </div>
+
+      {/* Windows Desktop & Offline EXE Section */}
+      <div className="bg-white border-2 border-slate-800 rounded-2xl p-6 shadow-sm space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-xs">
+              <Monitor className="w-6 h-6 text-blue-400" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <span>کارپێکردن لەسەر لاپتۆپ و کۆمپیوتەر وەک بەرنامەی سەربەخۆ (Windows .exe)</span>
+                <span className="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold">
+                  100% ئۆفلاین
+                </span>
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                سیستەمەکە دەتوانرێت بەتەواوی لەسەر لاپتۆپەکەت بەبێ ئینتەرنێت کاربکات و داتاکان لە ناوخۆی کۆمپیوتەرەکەت دەمێننەوە.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          {/* Method 1: Pre-packaged QISTYAR.exe */}
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+            <div className="flex items-center gap-2 font-bold text-slate-800">
+              <FolderArchive className="w-4 h-4 text-blue-600" />
+              <span>شێوازی یەکەم: فایلی ئامادەکراوی سەربەخۆ (QISTYAR.exe)</span>
+            </div>
+            <p className="text-slate-600 leading-relaxed text-[11px]">
+              لە ڕێگەی گیت‌هەبەوە فایلی <code className="bg-slate-200 px-1 py-0.5 rounded text-blue-900 font-bold">build-windows.yml</code> بە ئۆتۆماتیکی فایلی تەواوی پڕۆژەکە دەکاتە بەرنامەی <code className="font-bold text-emerald-700">QISTYAR.exe</code>. دەتوانیت فایلی زیپەکە دابگریت و لەسەر کۆمپیوتەر دەربهێنیت.
+            </p>
+            <div className="bg-white border border-slate-200 rounded-lg p-2.5 text-[11px] text-slate-700 space-y-1">
+              <div className="font-semibold text-slate-900">هەنگاوەکان:</div>
+              <ol className="list-decimal list-inside space-y-1 text-slate-600">
+                <li>فایلی زیپ لە گیت‌هەب دابگرە و بیکەرەوە (Extract)</li>
+                <li>دوو کلیک لەسەر <span className="font-bold text-blue-700">QISTYAR.exe</span> بکە</li>
+                <li>وێبگەڕ خۆکارانە لەسەر <span className="font-mono text-slate-900">http://localhost:3000</span> دەکرێتەوە</li>
+              </ol>
+            </div>
+          </div>
+
+          {/* Method 2: 1-Click Batch Launcher */}
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+            <div className="flex items-center gap-2 font-bold text-slate-800">
+              <Terminal className="w-4 h-4 text-emerald-600" />
+              <span>شێوازی دووەم: دەستپێکردنی خێرا (Start-QISTYAR.bat)</span>
+            </div>
+            <p className="text-slate-600 leading-relaxed text-[11px]">
+              ئەگەر کۆدی پڕۆژەکەت لایە، تەنیا ئەم فایلە هەڵکەرە بخەرە ناو فۆڵدەری سەرەکی پڕۆژەکە و کلیکی لێ بکە؛ خۆی هەموو شتێک ئامادە دەکات و پەڕەکە دەکاتەوە.
+            </p>
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <a
+                href="/api/download-launcher"
+                download="Start-QISTYAR.bat"
+                className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[11px] px-3 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-xs"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>داگرتنی Start-QISTYAR.bat</span>
+              </a>
+
+              <a
+                href="/api/download-silent-launcher"
+                download="Start-QISTYAR-Silent.vbs"
+                className="bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold text-[11px] px-3 py-2 rounded-lg flex items-center gap-1.5 transition-colors"
+                title="دەستپێکردن بەبێ دەرکەوتنی پەنجەرەی ڕەشی CMD"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>داگرتنی شێوازی بێدەنگ (.vbs)</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Local Storage & Security Notice */}
+        <div className="bg-blue-50/70 border border-blue-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="space-y-1">
+            <div className="font-bold text-blue-950 flex items-center gap-1.5">
+              <HardDrive className="w-4 h-4 text-blue-700" />
+              <span>داتاکانی ناوخۆ لە کۆمپیوتەرەکەت:</span>
+            </div>
+            <p className="text-blue-900 text-[11px]">
+              هەموو کڕیاران و گرێبەستەکان لە فایلی <code className="bg-blue-100 px-1 py-0.5 rounded font-mono font-bold">data/db.json</code> لە تەنیشت بەرنامەکە پاشەکەوت دەبن و هەمیشە پارێزراون.
+            </p>
+          </div>
+
+          <a
+            href="/api/download-readme"
+            download="README-Windows.txt"
+            className="inline-flex items-center gap-1.5 bg-white hover:bg-blue-100/50 text-blue-800 font-semibold text-xs px-3 py-2 rounded-lg border border-blue-300 transition-colors shrink-0"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>خوێندنەوەی ڕێنمایی کوردی (README.txt)</span>
+          </a>
         </div>
       </div>
 

@@ -2,6 +2,7 @@ import express from 'express';
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
+import child_process from 'child_process';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { ShopSettings, Customer, Contract, PaymentRecord, AppUser } from './src/types/index.ts';
@@ -17,18 +18,28 @@ interface Expense {
 
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const isSea = typeof (process as any).isSea === 'function' ? (process as any).isSea() : false;
+const isDesktopExe = process.env.IS_DESKTOP_EXE === 'true' || isSea || process.execPath.toLowerCase().endsWith('.exe');
+
+let baseAppDir: string;
+try {
+  const currentFile = fileURLToPath(import.meta.url);
+  baseAppDir = isDesktopExe ? path.dirname(process.execPath) : path.dirname(currentFile);
+} catch {
+  baseAppDir = isDesktopExe ? path.dirname(process.execPath) : process.cwd();
+}
+
+// Data storage directory and file (works in cloud, dev, or local desktop exe)
+const DATA_DIR = fs.existsSync(path.resolve(baseAppDir, 'data'))
+  ? path.resolve(baseAppDir, 'data')
+  : (fs.existsSync(path.resolve(process.cwd(), 'data')) ? path.resolve(process.cwd(), 'data') : path.resolve(baseAppDir, 'data'));
+const DB_FILE = path.join(DATA_DIR, 'db.json');
 
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ extended: true, limit: '25mb' }));
-
-// Data storage directory and file
-const DATA_DIR = path.resolve(__dirname, 'data');
-const DB_FILE = path.join(DATA_DIR, 'db.json');
 
 const defaultLegalTerms = `١. لایەنی دووەم (کڕیار) و لایەنی سێیەم (کفیل) بە یەکەوە و بە هاوبەشی بەرپرسیارن لە دانەوەی هەموو بڕی پارەی قیستەکان لە کاتی دیاریکراوی خۆیدا.
 ٢. لە حاڵەتی دواکەوتنی هەر قیستێک بۆ ماوەی زیاتر لە ٧ ڕۆژ، تەواوی پارەی ماوەی قیستەکان دەبێتە قەرزێکی دەستبەجێ (حاڵ) و فرۆشیار مافی قانونی هەیە پەنا بباتە بەر دادگاکانی هەرێمی کوردستان و دەستبەسەرداگرتنی مۆڵەت و مووچەی کڕیار یان کفیل.
@@ -689,6 +700,42 @@ app.get('/api/backup', (_req, res) => {
   res.send(JSON.stringify(db, null, 2));
 });
 
+// Download Windows Desktop Launcher Script
+app.get('/api/download-launcher', (_req, res) => {
+  const filePath = path.join(baseAppDir, 'Start-QISTYAR.bat');
+  if (fs.existsSync(filePath)) {
+    res.setHeader('Content-Type', 'application/x-bat');
+    res.setHeader('Content-Disposition', 'attachment; filename="Start-QISTYAR.bat"');
+    res.sendFile(filePath);
+  } else {
+    res.status(404).send('فایلی هەڵکردن نەدۆزرایەوە');
+  }
+});
+
+// Download Windows Silent Launcher Script
+app.get('/api/download-silent-launcher', (_req, res) => {
+  const filePath = path.join(baseAppDir, 'Start-QISTYAR-Silent.vbs');
+  if (fs.existsSync(filePath)) {
+    res.setHeader('Content-Type', 'text/vbscript');
+    res.setHeader('Content-Disposition', 'attachment; filename="Start-QISTYAR-Silent.vbs"');
+    res.sendFile(filePath);
+  } else {
+    res.status(404).send('فایلی هەڵکردنی بێدەنگ نەدۆزرایەوە');
+  }
+});
+
+// Download Windows Readme Guide
+app.get('/api/download-readme', (_req, res) => {
+  const filePath = path.join(baseAppDir, 'README-Windows.txt');
+  if (fs.existsSync(filePath)) {
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="README-Windows.txt"');
+    res.sendFile(filePath);
+  } else {
+    res.status(404).send('فایلی ڕێنمایی نەدۆزرایەوە');
+  }
+});
+
 // Restore Endpoint
 app.post('/api/restore', (req, res) => {
   try {
@@ -713,7 +760,7 @@ app.post('/api/restore', (req, res) => {
 
 // Serve frontend with Vite in dev, or static build in production
 async function startServer() {
-  const isProd = process.env.NODE_ENV === 'production';
+  const isProd = process.env.NODE_ENV === 'production' || isDesktopExe || isSea;
   const httpServer = http.createServer(app);
 
   if (!isProd) {
@@ -727,7 +774,12 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.resolve(__dirname, 'dist');
+    const candidates = [
+      path.resolve(baseAppDir, 'dist'),
+      path.resolve(process.cwd(), 'dist'),
+      path.resolve(__dirname || '', 'dist'),
+    ];
+    const distPath = candidates.find((p) => fs.existsSync(p)) || path.resolve(baseAppDir, 'dist');
     app.use(express.static(distPath));
     app.get('*', (_req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
@@ -735,7 +787,17 @@ async function startServer() {
   }
 
   httpServer.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    const shouldOpen = process.argv.includes('--open') || process.env.OPEN_BROWSER === 'true' || isDesktopExe;
+    if (shouldOpen) {
+      const url = `http://localhost:${PORT}`;
+      const cmd = process.platform === 'win32'
+        ? `start "" "${url}"`
+        : process.platform === 'darwin'
+        ? `open "${url}"`
+        : `xdg-open "${url}"`;
+      child_process.exec(cmd, () => {});
+    }
   });
 }
 
